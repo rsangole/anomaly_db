@@ -1,5 +1,4 @@
 # install.packages("foreign")
-library("foreign")
 library("tidyverse")
 library("DBI")
 
@@ -16,21 +15,97 @@ con <- DBI::dbConnect(
 # ODDS ----
 # http://odds.cs.stonybrook.edu/
 
-# * enron data
+# * enron data ----
 # https://www.cs.cmu.edu/~./enron/
 # location: large_data/enron/
 
-# * Numenta Anomaly Benchmark (NAB)
-# https://github.com/numenta/NAB/tree/master/data
+# * Numenta Anomaly Benchmark (NAB) ----
+# https://github.com/numenta/NAB
 # location: large_data/nab_data
 
+process_files <- function(dir) {
+  file_ls <- fs::dir_ls(dir)
+  cats <- fs::path_file(file_ls) %>% fs::path_ext_remove() %>%
+    janitor::make_clean_names()
+  map2_df(file_ls, cats,
+          ~ readr::read_csv(file = .x) %>%
+            mutate(cat = .y))
+}
 
+dat <- process_files("large_data/nab_data/realKnownCause/")
+dat %>% glimpse()
+DBI::dbWriteTable(con, "nab_realknowncause", dat)
+con %>% dplyr::tbl("nab_realknowncause")
+
+dat <- process_files("large_data/nab_data/realTraffic/")
+dat %>% glimpse()
+DBI::dbWriteTable(con, "nab_realtraffic", dat)
+con %>% dplyr::tbl("nab_realtraffic")
+
+dat <- process_files("large_data/nab_data/realTweets/")
+dat %>% glimpse()
+DBI::dbWriteTable(con, "nab_realadexchange", dat)
+con %>% dplyr::tbl("nab_realadexchange")
+
+dat <- process_files("large_data/nab_data/realAdExchange/")
+dat %>% glimpse()
+DBI::dbWriteTable(con, "nab_realadexchange", dat)
+con %>% dplyr::tbl("nab_realadexchange")
+
+dat <- process_files("large_data/nab_data/realAWSCloudwatch/")
+dat %>% glimpse()
+DBI::dbWriteTable(con, "nab_realcloudwatch", dat)
+con %>% dplyr::tbl("nab_realcloudwatch")
+
+dat <- process_files("large_data/nab_data/artificialNoAnomaly/")
+dat %>% glimpse()
+DBI::dbWriteTable(con, "nab_artificial_noanomaly", dat)
+con %>% dplyr::tbl("nab_artificial_noanomaly")
+
+dat <- process_files("large_data/nab_data/artificialWithAnomaly/")
+dat %>% glimpse()
+DBI::dbWriteTable(con, "nab_artificial_withanomaly", dat)
+con %>% dplyr::tbl("nab_artificial_withanomaly")
+
+# * VAST 2012 ----
+# https://www.vacommunity.org/tiki-index.php?page=VAST%20Challenge%202012%3A%20Challenge%20Descriptions
+# large_data/vast_2012/mc1/metaDB-csv-3-7
+
+files <- fs::dir_ls(path = "large_data/vast_2012/mc1/metaDB-csv-3-7/")
+meta_data <- read_csv(files[[1]])
+meta_data %>% glimpse()
+DBI::dbWriteTable(con, "vast2012_node_meta_data", meta_data)
+con %>% dplyr::tbl("vast2012_node_meta_data")
+
+node_health_ts <- data.table::fread(files[[2]]) #read_csv is too slow
+node_health_ts
+# write table fails for the whole table
+# splitting into chunks
+cuts <- cut(1:node_health_ts[,.N], breaks = 160, labels = F)
+node_health_ts[, split_id := cuts]
+# Writing the first 10 chunks (~ 10 mil rows)
+map(1:10,
+    ~ DBI::dbWriteTable(conn = con, 
+                        name = "vast2012_node_health_ts",
+                        value = node_health_ts[split_id == .x][,-7],
+                        append = T)
+    )
+DBI::dbWriteTable(con, "vast2012_node_health_ts", node_health_ts)
+con %>% dplyr::tbl("vast2012_node_health_ts")
+
+# * ionosphere ----
+# http://odds.cs.stonybrook.edu/ionosphere-dataset/
+# large_data/ionosphere
+dat <- read_csv("large_data/ionosphere/ionosphere.data", col_names = F) %>% 
+  rename(class = X35)
+DBI::dbWriteTable(con, "ionosphere", dat)
+con %>% dplyr::tbl("ionosphere")
 
 # MONASH ----
 # https://figshare.com/articles/dataset/Datasets_12338_zip/7705127
 # location : large_data/Datasets_12338
 
-# * abalone data
+# * abalone data ----
 files <- fs::dir_ls(path = "large_data/Datasets_12338/", regexp = "abalone")
 dat <- map_df(files, ~foreign::read.arff(.x)) %>% 
   janitor::clean_names()
@@ -38,7 +113,7 @@ dat %>% glimpse()
 DBI::dbWriteTable(con, "abalone", dat)
 con %>% dplyr::tbl("abalone")
 
-# * mice data
+# * mice data ----
 files <- fs::dir_ls(path = "large_data/Datasets_12338/", regexp = "mice")
 dat <- map_df(files, ~foreign::read.arff(.x)) %>% 
   janitor::clean_names()
