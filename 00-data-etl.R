@@ -119,14 +119,14 @@ read_ucr_data <- function(fname){
                  "test")
   
   dat <- data.table::fread(fname)
-  names(dat) <- c("class", paste0("T", 1:(ncol(dat)-1)))
+  dat[, id := 1:.N]
+  names(dat) <- c("class", paste0("T", 1:(ncol(dat)-2)), "id")
   dat %>% 
-    pivot_longer(-class, names_to = "time") %>% 
+    pivot_longer(starts_with("T"), names_to = "time") %>% 
     mutate(time = as.numeric(gsub("T", "", time)),
            part = .part)
   
 }
-
 load_one_ucr_dataset <- function(.dir){
   .db <- paste0("ucr_",
                 .dir %>% 
