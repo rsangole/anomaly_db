@@ -30,42 +30,43 @@ process_files <- function(dir) {
     janitor::make_clean_names()
   map2_df(file_ls, cats,
           ~ readr::read_csv(file = .x) %>%
-            mutate(cat = .y))
+            mutate(cat = .y)) %>% 
+    rename(time = timestamp)
 }
 
 dat <- process_files("large_data/nab_data/realKnownCause/")
 dat %>% glimpse()
-DBI::dbWriteTable(con, "nab_realknowncause", dat)
+DBI::dbWriteTable(con, "nab_realknowncause", dat, overwrite = T)
 con %>% dplyr::tbl("nab_realknowncause")
 
 dat <- process_files("large_data/nab_data/realTraffic/")
 dat %>% glimpse()
-DBI::dbWriteTable(con, "nab_realtraffic", dat)
+DBI::dbWriteTable(con, "nab_realtraffic", dat, overwrite = T)
 con %>% dplyr::tbl("nab_realtraffic")
 
 dat <- process_files("large_data/nab_data/realTweets/")
 dat %>% glimpse()
-DBI::dbWriteTable(con, "nab_realadexchange", dat)
+DBI::dbWriteTable(con, "nab_realadexchange", dat, overwrite = T)
 con %>% dplyr::tbl("nab_realadexchange")
 
 dat <- process_files("large_data/nab_data/realAdExchange/")
 dat %>% glimpse()
-DBI::dbWriteTable(con, "nab_realadexchange", dat)
+DBI::dbWriteTable(con, "nab_realadexchange", dat, overwrite = T)
 con %>% dplyr::tbl("nab_realadexchange")
 
 dat <- process_files("large_data/nab_data/realAWSCloudwatch/")
 dat %>% glimpse()
-DBI::dbWriteTable(con, "nab_realcloudwatch", dat)
+DBI::dbWriteTable(con, "nab_realcloudwatch", dat, overwrite = T)
 con %>% dplyr::tbl("nab_realcloudwatch")
 
 dat <- process_files("large_data/nab_data/artificialNoAnomaly/")
 dat %>% glimpse()
-DBI::dbWriteTable(con, "nab_artificial_noanomaly", dat)
+DBI::dbWriteTable(con, "nab_artificial_noanomaly", dat, overwrite = T)
 con %>% dplyr::tbl("nab_artificial_noanomaly")
 
 dat <- process_files("large_data/nab_data/artificialWithAnomaly/")
 dat %>% glimpse()
-DBI::dbWriteTable(con, "nab_artificial_withanomaly", dat)
+DBI::dbWriteTable(con, "nab_artificial_withanomaly", dat, overwrite = T)
 con %>% dplyr::tbl("nab_artificial_withanomaly")
 
 # * VAST 2012 ----
