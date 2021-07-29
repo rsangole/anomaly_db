@@ -1,6 +1,7 @@
 # install.packages("foreign")
 library("tidyverse")
 library("DBI")
+library("progress")
 
 # DB Connection ----
 con <- DBI::dbConnect(
@@ -136,6 +137,7 @@ load_one_ucr_dataset <- function(.dir){
   pb$tick(tokens = list(db = .db,
                         nrow = scales::label_comma()(nrow(dat))))
   DBI::dbWriteTable(con, .db, dat, overwrite = TRUE)
+  Sys.sleep(0.1)
 }
 
 pb <- progress_bar$new(total = length(ucr_datasets),
