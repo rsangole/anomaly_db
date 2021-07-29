@@ -9,4 +9,3 @@ List of sources:
 - https://www.cs.ucr.edu/~eamonn/time_series_data/
 - https://yahooresearch.tumblr.com/post/114590420346/a-benchmark-dataset-for-time-series-anomaly
 - https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=508099
-- 
