@@ -101,6 +101,49 @@ dat <- read_csv("large_data/ionosphere/ionosphere.data", col_names = F) %>%
 DBI::dbWriteTable(con, "ionosphere", dat)
 con %>% dplyr::tbl("ionosphere")
 
+
+# UCR ----
+# https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/
+# large_data/ucr_archive
+
+ucr_datasets <- fs::dir_ls("large_data/ucr_archive/", type = "directory")
+ucr_datasets_names <- ucr_datasets %>% 
+  fs::path_file() %>% 
+  janitor::make_clean_names()
+
+read_ucr_data <- function(fname){
+  
+  .part = ifelse(grepl("TRAIN", fname),
+                 "train",
+                 "test")
+  
+  dat <- data.table::fread(fname)
+  names(dat) <- c("class", paste0("T", 1:(ncol(dat)-1)))
+  dat %>% 
+    pivot_longer(-class, names_to = "time") %>% 
+    mutate(time = as.numeric(gsub("T", "", time)),
+           part = .part)
+  
+}
+
+load_one_ucr_dataset <- function(.dir){
+  .db <- paste0("ucr_",
+                .dir %>% 
+                  fs::path_file() %>% 
+                  janitor::make_clean_names())
+  files <- rev(fs::dir_ls(.dir, glob = "*.tsv"))
+  dat <- map_df(files, read_ucr_data)
+  pb$tick(tokens = list(db = .db,
+                        nrow = scales::label_comma()(nrow(dat))))
+  DBI::dbWriteTable(con, .db, dat, overwrite = TRUE)
+}
+
+pb <- progress_bar$new(total = length(ucr_datasets),
+                       clear = FALSE,
+                       show_after = 0,
+                       format = "[:bar] :percent :db <rows = :nrow>")
+walk(ucr_datasets, load_one_ucr_dataset)
+
 # MONASH ----
 # https://figshare.com/articles/dataset/Datasets_12338_zip/7705127
 # location : large_data/Datasets_12338
