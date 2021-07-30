@@ -46,8 +46,8 @@ con %>% dplyr::tbl("nab_realtraffic")
 
 dat <- process_files("large_data/nab_data/realTweets/")
 dat %>% glimpse()
-DBI::dbWriteTable(con, "nab_realadexchange", dat, overwrite = T)
-con %>% dplyr::tbl("nab_realadexchange")
+DBI::dbWriteTable(con, "nab_realtwitter", dat, overwrite = T)
+con %>% dplyr::tbl("nab_realtwitter")
 
 dat <- process_files("large_data/nab_data/realAdExchange/")
 dat %>% glimpse()
@@ -109,9 +109,6 @@ con %>% dplyr::tbl("ionosphere")
 # large_data/ucr_archive
 
 ucr_datasets <- fs::dir_ls("large_data/ucr_archive/", type = "directory")
-ucr_datasets_names <- ucr_datasets %>% 
-  fs::path_file() %>% 
-  janitor::make_clean_names()
 
 read_ucr_data <- function(fname){
   
@@ -135,6 +132,7 @@ load_one_ucr_dataset <- function(.dir){
                   janitor::make_clean_names())
   files <- rev(fs::dir_ls(.dir, glob = "*.tsv"))
   dat <- map_df(files, read_ucr_data)
+  
   pb$tick(tokens = list(db = .db,
                         nrow = scales::label_comma()(nrow(dat))))
   DBI::dbWriteTable(con, .db, dat, overwrite = TRUE)
@@ -146,6 +144,34 @@ pb <- progress_bar$new(total = length(ucr_datasets),
                        show_after = 0,
                        format = "[:bar] :percent :db <rows = :nrow>")
 walk(ucr_datasets, load_one_ucr_dataset)
+
+
+dbCreateTable(
+  conn = con,
+  name = "ucr_00_meta",
+  fields = c("table" = "varchar",
+             "meta" = "varchar")
+)
+load_one_ucr_meta <- function(.dir){
+  .db <- paste0("ucr_",
+                .dir %>% 
+                  fs::path_file() %>% 
+                  janitor::make_clean_names())
+  md_doc <- fs::dir_ls(.dir, glob = "*.md")
+  md_doc <- readr::read_file(md_doc)
+  pb$tick(tokens = list(db = .db))
+  DBI::dbWriteTable(conn = con, 
+                  name = "ucr_00_meta",
+                  value = tibble(table = .db, meta = md_doc),
+                  append = TRUE)
+  Sys.sleep(0.1)
+}
+pb <- progress_bar$new(total = length(ucr_datasets),
+                       clear = FALSE,
+                       show_after = 0,
+                       format = "[:bar] :percent :db")
+walk(ucr_datasets, load_one_ucr_meta)
+
 
 # MONASH ----
 # https://figshare.com/articles/dataset/Datasets_12338_zip/7705127
