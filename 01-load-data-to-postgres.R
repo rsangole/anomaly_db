@@ -16,10 +16,6 @@ con <- DBI::dbConnect(
 # ODDS ----
 # http://odds.cs.stonybrook.edu/
 
-# * enron data ----
-# https://www.cs.cmu.edu/~./enron/
-# location: large_data/enron/
-
 # * Numenta Anomaly Benchmark (NAB) ----
 # https://github.com/numenta/NAB
 # location: large_data/nab_data
