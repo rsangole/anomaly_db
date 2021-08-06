@@ -65,31 +65,32 @@ dat %>% glimpse()
 DBI::dbWriteTable(con, "nab_artificial_withanomaly", dat, overwrite = T)
 con %>% dplyr::tbl("nab_artificial_withanomaly")
 
-# * VAST 2012 ----
-# https://www.vacommunity.org/tiki-index.php?page=VAST%20Challenge%202012%3A%20Challenge%20Descriptions
-# large_data/vast_2012/mc1/metaDB-csv-3-7
-
-files <- fs::dir_ls(path = "large_data/vast_2012/mc1/metaDB-csv-3-7/")
-meta_data <- read_csv(files[[1]])
-meta_data %>% glimpse()
-DBI::dbWriteTable(con, "vast2012_node_meta_data", meta_data)
-con %>% dplyr::tbl("vast2012_node_meta_data")
-
-node_health_ts <- data.table::fread(files[[2]]) #read_csv is too slow
-node_health_ts
-# write table fails for the whole table
-# splitting into chunks
-cuts <- cut(1:node_health_ts[,.N], breaks = 160, labels = F)
-node_health_ts[, split_id := cuts]
-# Writing the first 10 chunks (~ 10 mil rows)
-map(1:10,
-    ~ DBI::dbWriteTable(conn = con, 
-                        name = "vast2012_node_health_ts",
-                        value = node_health_ts[split_id == .x][,-7],
-                        append = T)
-    )
-DBI::dbWriteTable(con, "vast2012_node_health_ts", node_health_ts)
-con %>% dplyr::tbl("vast2012_node_health_ts")
+# # * VAST 2012 ---
+# # NOTE - This dataset needs to be download manually-
+# # https://www.vacommunity.org/tiki-index.php?page=VAST%20Challenge%202012%3A%20Challenge%20Descriptions
+# # large_data/vast_2012/mc1/metaDB-csv-3-7
+# 
+# files <- fs::dir_ls(path = "large_data/vast_2012/mc1/metaDB-csv-3-7/")
+# meta_data <- read_csv(files[[1]])
+# meta_data %>% glimpse()
+# DBI::dbWriteTable(con, "vast2012_node_meta_data", meta_data)
+# con %>% dplyr::tbl("vast2012_node_meta_data")
+# 
+# node_health_ts <- data.table::fread(files[[2]]) #read_csv is too slow
+# node_health_ts
+# # write table fails for the whole table
+# # splitting into chunks
+# cuts <- cut(1:node_health_ts[,.N], breaks = 160, labels = F)
+# node_health_ts[, split_id := cuts]
+# # Writing the first 10 chunks (~ 10 mil rows)
+# map(1:10,
+#     ~ DBI::dbWriteTable(conn = con, 
+#                         name = "vast2012_node_health_ts",
+#                         value = node_health_ts[split_id == .x][,-7],
+#                         append = T)
+#     )
+# DBI::dbWriteTable(con, "vast2012_node_health_ts", node_health_ts)
+# con %>% dplyr::tbl("vast2012_node_health_ts")
 
 # * ionosphere ----
 # http://odds.cs.stonybrook.edu/ionosphere-dataset/
@@ -104,7 +105,7 @@ con %>% dplyr::tbl("ionosphere")
 # https://www.cs.ucr.edu/%7Eeamonn/time_series_data_2018/
 # large_data/ucr_archive
 
-ucr_datasets <- fs::dir_ls("large_data/ucr_archive/", type = "directory")
+ucr_datasets <- fs::dir_ls("large_data/UCRArchive_2018/", type = "directory")
 
 read_ucr_data <- function(fname){
   
@@ -171,22 +172,38 @@ walk(ucr_datasets, load_one_ucr_meta)
 
 # MONASH ----
 # https://figshare.com/articles/dataset/Datasets_12338_zip/7705127
-# location : large_data/Datasets_12338
+# location : large_data/monash
 
 # * abalone data ----
-files <- fs::dir_ls(path = "large_data/Datasets_12338/", regexp = "abalone")
+files <- fs::dir_ls(path = "large_data/monash/", regexp = "abalone")
 dat <- map_df(files, ~foreign::read.arff(.x)) %>% 
   janitor::clean_names()
 dat %>% glimpse()
 DBI::dbWriteTable(con, "abalone", dat)
 con %>% dplyr::tbl("abalone")
 
-# * mice data ----
-files <- fs::dir_ls(path = "large_data/Datasets_12338/", regexp = "mice")
+## * mice data ----
+files <- fs::dir_ls(path = "large_data/monash/", regexp = "mice")
 dat <- map_df(files, ~foreign::read.arff(.x)) %>% 
   janitor::clean_names()
 dat %>% glimpse()
 DBI::dbWriteTable(con, "mice", dat)
 con %>% dplyr::tbl("mice")
+
+# * HeartDisease_withoutdupl data ----
+files <- fs::dir_ls(path = "large_data/monash/", regexp = "HeartDisease_withoutdupl")
+dat <- map_df(files, ~foreign::read.arff(.x)) %>% 
+  janitor::clean_names()
+dat %>% glimpse()
+DBI::dbWriteTable(con, "heartdisease_withoutdupl", dat)
+con %>% dplyr::tbl("heartdisease_withoutdupl")
+
+# * Parkinson_withoutdupl data ----
+files <- fs::dir_ls(path = "large_data/monash/", regexp = "Parkinson_withoutdupl")
+dat <- map_df(files, ~foreign::read.arff(.x)) %>% 
+  janitor::clean_names()
+dat %>% glimpse()
+DBI::dbWriteTable(con, "parkinson_withoutdupl", dat)
+con %>% dplyr::tbl("parkinson_withoutdupl")
 
 
