@@ -47,7 +47,8 @@ shinyServer(function(input, output) {
                        color = cat)) +
             geom_line() +
             facet_wrap(~ cat,
-                       scales = "free") -> p
+                       scales = "free",
+                       ncol = 1) -> p
         
         ggplotly(p)
         

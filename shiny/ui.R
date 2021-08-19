@@ -18,7 +18,8 @@ shinyUI(
                 mainPanel(
                     width = 10,
                     uiOutput("ucr_md"),
-                    plotlyOutput("ucr_plot")
+                    plotlyOutput("ucr_plot",
+                                 height = "800px")
                 )
             )
         ),
@@ -37,7 +38,8 @@ shinyUI(
                 mainPanel(
                     width = 10,
                     uiOutput("nab_md"),
-                    plotlyOutput("nab_plot")
+                    plotlyOutput("nab_plot",
+                                 height = "800px")
                 )
             )
             
