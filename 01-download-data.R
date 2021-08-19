@@ -1,41 +1,8 @@
-library(tidyverse)
-
-cli::cli_inform("You're working in {here::here()}")
-
-# configure ----
-
-datasets_to_download <- list(
-  ionosphere = T,
-  nab = T,
-  monash = T, #2G download, 7G uncompressed
-  ucr = T
-)
-
-# dir and git setup ----
-
-# create large_data if does not exist
-if(!fs::dir_exists(here::here("large_data"))){
-  cli::cli_alert("{here::here('large_data')} does not exist")
-  resp <- usethis::ui_yeah("Create {here::here('large_data')}?", yes = "Y", no = "N", shuffle = F)
-  if(!resp)
-    stop()
-  fs::dir_create(here::here("large_data"))
-}
-
-if(fs::dir_exists(here::here(".git")) & !fs::file_exists(here::here(".gitignore"))){
-  cli::cli_alert_danger("You have a git project, but no .gitignore. You must add {here::here('large_data')} to .gitignore since the data are massive.")
-  stop()
-}
-
-if(fs::file_exists(here::here(".gitignore")) &
-   !any(grepl("large_data", readLines(here::here(".gitignore"))))){
-  cli::cli_alert_danger("Your .gitignore does not have `large_data` specified. Add this to continue, since the data are massive.")
-  stop()
-  }
+stopifnot(any("datasets" %in% ls()))
 
 # download data ----
 
-if(datasets_to_download$ionosphere){
+if(datasets$ionosphere){
   DIR <- here::here("large_data/ionosphere")
   resp <- T
   if(fs::dir_exists(DIR)){
@@ -50,7 +17,7 @@ if(datasets_to_download$ionosphere){
   }
 }
 
-if(datasets_to_download$monash){
+if(datasets$monash){
   DIR <- here::here("large_data/monash")
   resp <- T
   if(fs::dir_exists(DIR)){
@@ -68,7 +35,7 @@ if(datasets_to_download$monash){
   }
 }
 
-if(datasets_to_download$nab){
+if(datasets$nab){
   DIR <- here::here("large_data/nab_data")
   resp <- T
   if(fs::dir_exists(DIR)){
@@ -90,7 +57,7 @@ if(datasets_to_download$nab){
   }
 }
 
-if(datasets_to_download$ucr){
+if(datasets$ucr){
   DIR <- here::here("large_data/UCRArchive_2018")
   resp <- T
   if(fs::dir_exists(DIR)){
@@ -104,6 +71,3 @@ if(datasets_to_download$ucr){
     fs::file_delete(here::here("large_data/UCRArchive_2018.zip"))
   }
 }
-
-
-rstudioapi::navigateToFile(here::here("01-load-data-to-postgres.R"))
